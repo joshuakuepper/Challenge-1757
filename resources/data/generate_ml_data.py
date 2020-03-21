@@ -5,55 +5,41 @@ from utils.get_data_from_mongodb import DBConnection
 
 import pandas as pd
 import numpy as np
-
-
-# https://towardsdatascience.com/social-distancing-to-slow-the-coronavirus-768292f04296
-def base_seir_model(N, t_max=100, dt=0.1):
-    # Define parameters
-    t_max = 100
-    dt = .1
-    t = np.linspace(0, t_max, int(t_max / dt) + 1)
-    N = 10000
-    init_vals = 1 - 1 / N, 1 / N, 0, 0
-    alpha = 0.2
-    beta = 1.75
-    gamma = 0.5
-    params = alpha, beta, gamma
-
-    S_0, E_0, I_0, R_0 = init_vals
-    S, E, I, R = [S_0], [E_0], [I_0], [R_0]
-    alpha, beta, gamma = params
-    dt = t[1] - t[0]
-    for _ in t[1:]:
-        next_S = S[-1] - (beta*S[-1]*I[-1])*dt
-        next_E = E[-1] + (beta*S[-1]*I[-1] - alpha*E[-1])*dt
-        next_I = I[-1] + (alpha*E[-1] - gamma*I[-1])*dt
-        next_R = R[-1] + (gamma*I[-1])*dt
-        S.append(next_S)
-        E.append(next_E)
-        I.append(next_I)
-        R.append(next_R)
-    return R  #np.stack([S, E, I, R]).T
+from datetime import datetime,timedelta
 
 def preprocess_data(df):
-    area_list = []
-    for value in df["area"].values:
-        if str(value) == 'nan':
-            area_list.append(np.NaN)
-            continue
-        area_list.append(value[-1])
-
+    # calculate N3
+    N3 = []
     R0_list = []
-    for area in df["area"].values:
-        if str(area) == 'nan':
-                R0_list.append(np.NaN)
-                continue
-        if population[population["Country"] == str(area[-1])].empty:
+    for index, row in df.iterrows():
+        cur_df = df[df['area1'] == row['area1']]
+        cur_df = cur_df[cur_df['area2'] == row['area2']]
+        cur_df = cur_df[cur_df['date'] >= row['date'] + 10]
+        if cur_df.empty:
+            N3.append(np.NaN)
             R0_list.append(np.NaN)
             continue
+        N3.append(cur_df.sort_values(by=['date']).iloc[0]['infected'])
+        if str(row['infected']) == 'nan' or str(row['infected']) == '':
+            R0_list.append(0)
+        elif int(row['infected']) == 0:
+            R0_list.append(0)
         else:
-            R0_list.append(base_seir_model(N=population[population["Country"] == str(area[-1])]["Value"].values))
-    df["base_RO"] = R0_list
+            R0_list.append(int(cur_df.sort_values(by=['date']).iloc[0]['infected']) / int(row['infected']))
+    df["N3"] = N3
+    df["cur_R0"] = R0_list
+
+    population_list = []
+    for area in df["area2"].values:
+        if str(area) == 'nan':
+                population_list.append(np.NaN)
+                continue
+        if population[population["Country Name"] == str(area)].empty:
+            population_list.append(np.NaN)
+            continue
+        else:
+            population_list.append(population[population["Country Name"] == str(area)][2018.0].values[0])
+    df["population"] = population_list
 
     return df
 
@@ -63,14 +49,34 @@ statsdb = conn.getStatisticDB()
 collections = ['cases', 'mesures']
 cases, measures = [pd.DataFrame(list(statsdb[col].find({}))) for col in collections]
 
-# get oecd data
-# https://stats.oecd.org/Index.aspx?DataSetCode=EDU_DEM
-population = pd.read_csv("oecd.csv")
-population = population[population['Year'] == 2017]
-population = population[population['Sex'] == 'Total']
-population = population[population['AGE'] == 'T']
-population = population[['Country', 'Value']]
-population = population[population['Value'] > 0.]
+# Convert Time into days in numbers from 2020-01-01
+cases['date'] = pd.to_datetime(cases['date'], unit='s')
+FMT = '%Y-%m-%d %H:%M:%S'
+date = cases['date']
+cases['date'] = date.map(lambda x: (datetime.strptime(str(x), FMT) - datetime.strptime("2020-01-01 00:00:00", FMT)).days)
+
+# get population data
+population = pd.read_excel("http://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel", header=None)
+population = population.iloc[3:]
+headers = population.iloc[0]
+population  = pd.DataFrame(population.values[1:], columns=headers)
+
+# convert array to str for now
+area1_list = []
+area2_list = []
+for value in cases.area.values.tolist():
+    if str(value) == 'nan':
+        area1_list.append(np.NaN)
+        area2_list.append(np.NaN)
+    else:
+        area1_list.append(value[0])
+        area2_list.append(value[1])
+cases['area1'] = area1_list
+cases['area2'] = area2_list
+del cases['area']
 
 df = preprocess_data(cases)
+
 print(df)
+df.to_csv("db_data_ml.csv")
+
