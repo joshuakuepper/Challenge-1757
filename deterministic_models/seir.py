@@ -148,7 +148,7 @@ if test_extended_seir:
     R0_other = .3 # actual estimate goes here
 
     solution1 = solve_ivp(
-        fun= make_ode(
+        fun= make_extended_seir_ode(
             N=N,
             R0=R0,
             a=a,
@@ -172,7 +172,7 @@ if test_extended_seir:
     )
 
     solution2 = solve_ivp(
-        fun= make_ode(
+        fun= make_extended_seir_ode(
             N=N,
             R0=R0_other,
             a=a,
@@ -221,5 +221,5 @@ if test_extended_seir:
     plt.ylim(0.,200000.) # adjust to personal taste
     plt.xlim(30.,80.)
     plt.plot([day_X, day_X],[0.,200000],color='k') # visually mark begin of curfew
-    plt.legend(loc=1)
+    plt.legend(loc=2)
     plt.show()
