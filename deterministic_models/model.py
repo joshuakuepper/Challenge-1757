@@ -51,6 +51,7 @@ class CompartmentModel:
                 self.MI[j, k] += 1.0
 
     def simulate(self, t_span, initial_value, output_nsteps = 4*365):
+        assert len(initial_value) == len(self.compartments)
         z0 = np.array(initial_value)
 
         def odefun(t, z):
@@ -69,35 +70,45 @@ class CompartmentModel:
         return res
 
 
-
-
 def make_seir_model(N, R0, a, gamma):
-
     parameters = {"beta": gamma * R0, "a": a, "gamma": gamma, "N": N}
-
     model = CompartmentModel(name='SEIR_Model', compartments=["S", "E", "I", "R"])
     model.add_transition(source="E", target="I", parameter="a")
     model.add_transition(source="I", target="R", parameter="gamma")
     model.add_transition(source="S", target="E", inhibitor="I", parameter="beta")
 
     model.set_parameters(parameters)
+    return model
 
+
+def make_seird_model(N, R0, a, gamma, delta):
+    parameters = {"beta": gamma * R0, "a": a, "gamma": gamma, "N": N, "delta": delta}
+    model = CompartmentModel(name='SEIR_Model', compartments=["S", "E", "I", "R", "D"])
+    model.add_transition(source="E", target="I", parameter="a")
+    model.add_transition(source="I", target="R", parameter="gamma")
+    model.add_transition(source="I", target="D", parameter="delta")
+    model.add_transition(source="S", target="E", inhibitor="I", parameter="beta")
+
+    model.set_parameters(parameters)
     return model
 
 
 if __name__ == '__main__':
-    model = make_seir_model(N=83e6, R0=4.0, a=1./5.5, gamma=1/9.)
+    model = make_seird_model(N=83e6, R0=4.0, a=1./5.5, gamma=1/9., delta=0.1)
     N = 83e6
     E0 = 0.0
     I0 = 1.0
-    y0 = [N - (E0 + I0), E0, I0, 0.]
+    y0 = [N - (E0 + I0), E0, I0, 0., 0.]
 
     data = model.simulate(t_span=(0., 365.), initial_value=y0)
 
     time = data["t"]
 
+    plot_opts = {"S": "k--", "E": "b--", "I": "m--", "R": "g", "D": "r"}
+
     for compartment in data["compartments"]:
-        plt.plot(time, data[compartment] / 1000000, label=compartment)
+        if plot_opts[compartment] is not None:
+            plt.plot(time, data[compartment] / 1000000, plot_opts[compartment], label=compartment)
 
     plt.ylabel('population x 1´000´000')
     plt.xlabel('days')
