@@ -53,7 +53,7 @@ solution = solve_ivp(
         N=N,
         R0=2.0,
         a=1/5.5,
-        gamma=1/9.
+        gamma=1/3.
     ),
     t_span=(0.0, 365.0),  # Integration time range (days)
     y0=[
