@@ -14,11 +14,13 @@ class CompartmentModel:
 
         self.param_config = {}
         self.N = 1.0
-        self.parameters = {}
+        self.parameters = {"N": self.N}
 
     def add_transition(self, source: str, target: str, parameter: str, inhibitor: str = None):
         i = self.compartments.index(source)
         j = self.compartments.index(target)
+
+        self.parameters[parameter] = 1.0
 
         if inhibitor is None:
             self.param_config[parameter] = {'type': 'L', 'source': i, 'target': j}
@@ -50,7 +52,7 @@ class CompartmentModel:
                 self.MI[i, k] += 1.0
                 self.MI[j, k] += 1.0
 
-    def simulate(self, t_span, initial_value, output_nsteps = 4*365):
+    def simulate(self, t_span, initial_value, output_nsteps):
         assert len(initial_value) == len(self.compartments)
         z0 = np.array(initial_value)
 
@@ -61,7 +63,7 @@ class CompartmentModel:
         solution = solve_ivp(odefun, t_span, z0)
 
         n = len(self.compartments)
-        res = {self.compartments[i]: solution.y[i] for i in range(0, n)}
+        res = {self.compartments[i]: solution.y[i]/self.N*100 for i in range(0, n)}
         res['t'] = solution.t
         res['name'] = self.name
         res['parameters'] = self.parameters
@@ -70,47 +72,104 @@ class CompartmentModel:
         return res
 
 
-def make_seir_model(N, R0, a, gamma):
-    parameters = {"beta": gamma * R0, "a": a, "gamma": gamma, "N": N}
-    model = CompartmentModel(name='SEIR_Model', compartments=["S", "E", "I", "R"])
-    model.add_transition(source="E", target="I", parameter="a")
-    model.add_transition(source="I", target="R", parameter="gamma")
-    model.add_transition(source="S", target="E", inhibitor="I", parameter="beta")
+def generate_model(model_structure):
+    compartments = model_structure["compartments"]
+    connections = model_structure["connections"]
+    name = model_structure["name"]
 
-    model.set_parameters(parameters)
-    return model
+    model = CompartmentModel(name=name, compartments=compartments)
+    for connection in connections:
+        if "inhibitor" in connection.keys():
+            model.add_transition(source=connection["source"], target=connection["target"],
+                                 inhibitor=connection["inhibitor"],
+                                 parameter=connection["parameter"])
+        else:
+            model.add_transition(source=connection["source"], target=connection["target"],
+                                 parameter=connection["parameter"])
 
-
-def make_seird_model(N, R0, a, gamma, delta):
-    parameters = {"beta": gamma * R0, "a": a, "gamma": gamma, "N": N, "delta": delta}
-    model = CompartmentModel(name='SEIR_Model', compartments=["S", "E", "I", "R", "D"])
-    model.add_transition(source="E", target="I", parameter="a")
-    model.add_transition(source="I", target="R", parameter="gamma")
-    model.add_transition(source="I", target="D", parameter="delta")
-    model.add_transition(source="S", target="E", inhibitor="I", parameter="beta")
-
-    model.set_parameters(parameters)
     return model
 
 
 if __name__ == '__main__':
-    model = make_seird_model(N=83e6, R0=4.0, a=1./5.5, gamma=1/9., delta=0.1)
-    N = 83e6
+
+    seird = {"name": "SEIRD 1",
+             "compartments": ["S", "E", "I", "R", "D"],
+             "connections": [
+                 {"source": "S", "target": "E", "inhibitor": "I", "parameter": "beta"},
+                 {"source": "E", "target": "I", "parameter": "a"},
+                 {"source": "I", "target": "R", "parameter": "gamma"},
+                 {"source": "I", "target": "D", "parameter": "delta"}
+             ]}
+    model = generate_model(seird)
+    para = model.parameters
+
+    N = 83.0e6
     E0 = 0.0
-    I0 = 1.0
+    I0 = 18000
     y0 = [N - (E0 + I0), E0, I0, 0., 0.]
 
-    data = model.simulate(t_span=(0., 365.), initial_value=y0)
+    gamma = 1./9.
+    delta = 0.05
+    a = 1./5.5
+    R0 = 3.3
 
-    time = data["t"]
+    t0 = 0.0
+    t1 = 80.0
+    t2 = 365.0
 
-    plot_opts = {"S": "k--", "E": "b--", "I": "m--", "R": "g", "D": "r"}
+    para["N"] = 83e6
+    para["beta"] = gamma * R0
+    para["a"] = a
+    para["gamma"] = gamma
+    para["delta"] = delta
 
-    for compartment in data["compartments"]:
+    model.set_parameters(para)
+
+    print(model.R)
+    print(model.MR)
+    print(model.MI)
+    data0 = model.simulate(t_span=(t0, t1), initial_value=y0, output_nsteps=8*int(t1-t0))
+
+    S = data0["S"].tolist()
+    E = data0["E"].tolist()
+    I = data0["I"].tolist()
+    R = data0["R"].tolist()
+    D = data0["D"].tolist()
+
+    time = data0["t"].tolist()
+
+    scale = model.N / 100.0
+    y1 = [S[-1]*scale, E[-1]*scale, I[-1]*scale, R[-1]*scale, D[-1]*scale]
+    print(y1)
+    para2 = model.parameters
+    R0 = 1.0
+    para2["beta"] = gamma * R0
+    model.set_parameters(para2)
+
+    data1 = model.simulate(t_span=(t1, t2), initial_value=y1, output_nsteps=8*int(t2-t1))
+
+    S.extend(data1["S"].tolist()[1:])
+    E.extend(data1["E"].tolist()[1:])
+    I.extend(data1["I"].tolist()[1:])
+    R.extend(data1["R"].tolist()[1:])
+    D.extend(data1["D"].tolist()[1:])
+    time.extend(data1["t"].tolist()[1:])
+
+    plot_data = {
+        "S": S,
+        "E": E,
+        "I": I,
+        "R": R,
+        "D": D
+    }
+    plot_opts = {"S": None, "E": "b-", "I": "m-", "R": "g", "D": "r-"}
+
+
+    for compartment in model.compartments:
         if plot_opts[compartment] is not None:
-            plt.plot(time, data[compartment] / 1000000, plot_opts[compartment], label=compartment)
+            plt.plot(time, plot_data[compartment], plot_opts[compartment], label=compartment)
 
-    plt.ylabel('population x 1´000´000')
+    plt.ylabel('population rel. %')
     plt.xlabel('days')
     plt.legend()
     plt.show()
