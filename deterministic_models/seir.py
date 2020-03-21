@@ -127,6 +127,99 @@ solution = solve_ivp(
     ],
 )
 
-# import matplotlib.pyplot as plt
-# plt.plot(solution.t, solution.y[2])  # plot the number of Infectious people vs time
-# plt.plot(solution.t, solution.y[3])  # plot the number of Recovered people vs time
+# TODO: This is just an example code block of how a time series with a change in R0
+#       at day X can be modelled. This does not belong here and should be moved!
+test_extended_seir = False
+if test_extended_seir:
+    # The following parameters very roughly reproduce the development in Germany.
+    # Handfitted voodoo, DO NOT USE THESE NUMBERS!
+    N = 83e6
+    E0 = 1.e0 # start with a single exposed person, because why not?
+    I0 = 0.e0
+
+    R0 = 5. # I could otherwise not reproduce the abrupt increase in confirmed cases and deaths
+    a  = 1/2.5 # from https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Modellierung_Deutschland.pdf?__blob=publicationFile
+    gamma = 1/10. # also from RKI
+    m = 0.0001 # since actual mortality is m/gamma, this amounts to 1 in 1000 infected dying
+    theta_M = .8
+    theta_E = .0033
+    theta_I = .033 # since people are in this stage for about 10 days, about a third of infected people get detected in this model
+    day_X = 65. # start curfew on day 65 after first person got exposed
+    R0_other = .3 # actual estimate goes here
+
+    solution1 = solve_ivp(
+        fun= make_extended_seir_ode(
+            N=N,
+            R0=R0,
+            a=a,
+            gamma=gamma,
+            m = m,
+            theta_M = theta_M,
+            theta_E = theta_E,
+            theta_I = theta_I,
+        ),
+        t_span=(0.0, day_X),
+        y0=[
+            N - (E0 + I0),
+            E0,
+            I0,
+            0.,
+            0.,
+            0.,
+            0.,
+            0.,
+        ],
+    )
+
+    solution2 = solve_ivp(
+        fun= make_extended_seir_ode(
+            N=N,
+            R0=R0_other,
+            a=a,
+            gamma=gamma,
+            m = m,
+            theta_M = theta_M,
+            theta_E = theta_E,
+            theta_I = theta_I,
+        ),
+        t_span=(day_X, 365.0), # run for a year
+        y0=solution1.y[:,-1] # start from solution of uncontained spread
+        ,
+    )
+
+    # mend arrays together
+    y = np.zeros((8,solution1.y.shape[1]+solution2.y.shape[1]))
+    y[:,:solution1.y.shape[1]] = solution1.y
+    y[:,solution1.y.shape[1]:] = solution2.y
+
+    t = np.zeros((solution1.t.shape[0]+solution2.t.shape[0]))
+    t[:solution1.y.shape[1]] = solution1.t
+    t[solution1.y.shape[1]:] = solution2.t
+
+    # Plot all the stuff. Dashed lines are 'hidden' magnitudes which do not appear in any statistics.
+    # Solid lines are reported numbers of deceased and infected people.
+    # Detected magnitudes are shifted 4 days back to account for the time it takes to evaluate a test
+    # (again, actual estimate goes here!). The reasoning behind this is the following: If a person gets
+    # tested on day x, they will get quarantined at that same day and cannot infect any more people, so
+    # they are part of ID already. Because it takes time to evaluate the test, however, they show up in
+    # reports only some days later.
+    import matplotlib.pyplot as plt
+
+    delay_test = 4.
+    plt.plot(t, y[1], '--', label='EU')
+    plt.plot(t, y[2], '--', label='IU')
+    plt.plot(t, y[3], '--', label='RU')
+    plt.plot(t+delay_test, y[4]*100, '-', label='MD x 100') # inflate number of deceased by a factor of
+                                                            # 100, because they would otherwise be
+                                                            # too few to see. Two y axis labels would be
+                                                            # more elegant here, admittedly.
+    plt.plot(t+delay_test, y[5], '--', label='ID')
+    plt.plot(t+delay_test, y[6], '--', label='RD')
+    plt.plot(t, y[7]*100, '--', label='MU x 100')
+    D_total = y[4] + y[5] + y[6]
+    plt.plot(t+delay_test, D_total, label='D (total)')
+    plt.ylim(0.,200000.) # adjust to personal taste
+    plt.xlim(30.,80.)
+    plt.plot([day_X, day_X],[0.,200000],color='k') # visually mark begin of curfew
+    plt.legend(loc=2)
+    plt.show()
