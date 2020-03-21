@@ -75,8 +75,14 @@ cases['area1'] = area1_list
 cases['area2'] = area2_list
 del cases['area']
 
+# Get country mapping
+map_country = pd.read_csv("country_mapping.csv", sep=";")
+for index, row in map_country.iterrows():
+    cases.loc[cases['area2'] == row['cases'], 'area2'] = row['world_bank']
+
+cases = cases[cases['source'] == 'JHU']
+
 df = preprocess_data(cases)
 
 print(df)
 df.to_csv("db_data_ml.csv")
-
