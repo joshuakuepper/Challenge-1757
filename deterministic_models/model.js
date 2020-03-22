@@ -31,7 +31,7 @@ function get_solution(dt, t_final, N, I0, R0, D_incbation, D_infectious, D_recov
     function f(t, x){
       // SEIR ODE
       if (t > InterventionTime && t < InterventionTime + duration){
-        var beta = (InterventionAmt)*R0/(D_infectious)
+        var beta = (InterventionAmt)/(D_infectious)
       } else if (t > InterventionTime + duration) {
         var beta = 0.5*R0/(D_infectious)
       } else {
