@@ -10,142 +10,169 @@
 </head>
 <body>
     <h1>SEIR Model</h1>
+    <figure>
+        <label for="r0">Verändern Sie R0</label>
+        <input id="r0" type="range" min="0" max="50" value="20"/>
+    </figure>
+    <figure>
+        <label for="t0">Intervention</label>
+        <input id="t0" type="range" min="0" max="200" value="364"/>
+    </figure>
     <button id="compute" style="undbackground-color: aliceblue">Compute</button>
-    <div id="results"></div>
-    <figure>
-  <label for="r0">Verändern Sie R0</label>
-  <input id="r0" type="range" min="0" max="50" value="20"/>
-</figure>
-    <figure>
-  <label for="t0">Intervention</label>
-  <input id="t0" type="range" min="0" max="200" value="364"/>
-</figure>
-</body>
+
+    <h2>Simple Model</h2>
+    <div id="results_simple"></div>
+
+    <h2>Extended Model</h2>
+    <div id="results_extended"></div>
+
+    </body>
 
 <script>
-    var R0 = 3.0;
-    var R00 = R0;
-    var T0 = 364;
+    const R0_default = 3.0;
+    let InterventionAmt = R0_default;
+    let InterventionTime = 150;
+
     function update(){
-        var TimeToDeath = 32;
-        var dt = 2.0;
-        var N = 86.0e6;
-        var I0 = 1.0;
-        
-        var D_incbation = 5.2;
-        var D_infectious = 2.9;
-        var D_recovery_mild = (14 - 2.9);
-        var D_recovery_severe = (31.5 - 2.9);
-        var D_hospital_lag = 5;
-        var D_death = TimeToDeath - D_infectious;
-        var P_SEVERE = 0.2;
-        var CFR = 0.02;
-        var InterventionTime = T0;
-        var InterventionAmt = R00;
-        var duration = 7*12*1e10;
-        var t_final = 365.0;
 
-        results = get_solution(dt, t_final, N, I0, R0, D_incbation, D_infectious, D_recovery_mild, D_hospital_lag,
-            D_recovery_severe, D_death, P_SEVERE, CFR, InterventionTime, InterventionAmt, duration);
+        const simulation_parameters = {
+            dt: 1.0,
+            t_final: 365.0
+        };
 
-        var show_steps = 100;
-        P = results["P"];
+        const population_parameters = {
+            N: 86.0e6,
+            I0: 1.0
+        };
 
-        var tt = [];
-        var H = [];
-        var E = [];
-        var I = [];
-        var R = [];
 
-        for (var i = 0; i < 365 / dt; i++) {
-            tt.push(dt * i);
-            H.push(P[i][1]);
-            E.push(P[i][4]);
-            I.push(P[i][3]);
-            R.push(P[i][2]);
+        const TimeToDeath = 32;
+        const D_infectious= 2.9;
+
+        const SEIRD_parameters = {
+            R0: R0_default,
+            D_infectious: D_infectious,
+            D_incubation: 5.2,
+            cfr: 0.02
+        };
+
+
+        const SEIRD_extended_parameters = {
+            R0: R0_default,
+            D_infectious: D_infectious,
+            D_incubation: 5.2,
+            cfr: 0.02,
+            D_recovery_mild: (14 - 2.9),
+            D_recovery_severe: (31.5 - 2.9),
+            D_hospital_lag: 5,
+            D_death: TimeToDeath - D_infectious,
+            p_severe: 0.2
+        };
+
+        const InterventionDuration = 7*12*1e10;
+
+        const results_simple = predict("seird", SEIRD_parameters, simulation_parameters, population_parameters,
+            InterventionTime, InterventionAmt, InterventionDuration);
+        const results_ext = predict("seird_extended", SEIRD_extended_parameters, simulation_parameters,
+            population_parameters, InterventionTime, InterventionAmt, InterventionDuration);
+
+        let tt = [];
+
+        for (let i = 0; i < simulation_parameters.t_final / simulation_parameters.dt; i++) {
+            tt.push(simulation_parameters.dt * i);
         }
 
-        var t = tt.slice(0, show_steps);
-
-        var LH = {
-            x: t,
-            y: H,
-            type: 'scatter',
-            name: 'Hospitalized'
-        };
-
-
-        var LE = {
-            x: t,
-            y: E,
-            type: 'scatter',
-            name: 'Exposed'
-        };
-
-        var LI = {
-            x: t,
-            y: I,
+        let Infected_simple = {
+            x: tt,
+            y: results_simple.Infected,
             type: 'scatter',
             name: 'Infected'
         };
 
-        var LR = {
-            x: t,
-            y: R,
+        console.log(results_simple);
+        console.log(tt);
+
+        let Recovered_simple = {
+            x: tt,
+            y: results_simple.Recovered,
             type: 'scatter',
             name: 'Recovered'
         };
 
-        var LD = {
-            x: t,
-            y: results.deaths,
+        let Dead_simple = {
+            x: tt,
+            y: results_simple.Dead,
             type: 'scatter',
-            name: 'Death'
+            name: 'Dead'
         };
 
 
-        var data = [LH, LE, LI, LR, LD];
+        let data_simple = [Infected_simple, Recovered_simple, Dead_simple];
+        Plotly.newPlot('results_simple', data_simple);
 
-        Plotly.newPlot('results', data);
+        let Infected_extended = {
+            x: tt,
+            y: results_ext.Infected,
+            type: 'scatter',
+            name: 'Infected'
+        };
+
+        let Recovered_extended = {
+            x: tt,
+            y: results_ext.Recovered,
+            type: 'scatter',
+            name: 'Recovered'
+        };
+
+        let Dead_extended = {
+            x: tt,
+            y: results_ext.Dead,
+            type: 'scatter',
+            name: 'Dead'
+        };
+
+
+        let data_extended = [Infected_extended, Recovered_extended, Dead_extended];
+        Plotly.newPlot('results_extended', data_extended);
+
     }
     (function () {
         function init() {
-            var r0 = document.querySelector('#r0');
+            let r0 = document.querySelector('#r0');
             r0.addEventListener('input', showR0);
             showR0();
             r0.addEventListener('input', update);
             update();
-        };
+        }
 
         function showR0() {
             //var imageElement = document.querySelector('#image');
-            var rr0 = document.querySelector('#r0');
-            R00 = rr0.value/10;
-            //console.log(R0)
+            let rr0 = document.querySelector('#r0');
+            InterventionAmt = rr0.value/10;
 
             return false;
-        };
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             init();
         });
     }());
         (function () {
         function init() {
-            var t0 = document.querySelector('#t0');
+            let t0 = document.querySelector('#t0');
             t0.addEventListener('input', showT0);
             showT0();
             t0.addEventListener('input', update);
             update();
-        };
+        }
 
         function showT0() {
             //var imageElement = document.querySelector('#image');
-            var tt0 = document.querySelector('#t0');
-            T0 = tt0.value;
-            console.log(T0)
-
+            let tt0 = document.querySelector('#t0');
+            InterventionTime = tt0.value;
+            console.log(InterventionTime);
             return false;
-        };
+        }
         document.addEventListener("DOMContentLoaded", function () {
             init();
         });

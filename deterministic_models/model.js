@@ -1,4 +1,4 @@
-var Integrators = {
+const Integrators = {
     Euler    : [[1]],
     Midpoint : [[.5,.5],[0, 1]],
     Heun     : [[1, 1],[.5,.5]],
@@ -12,206 +12,188 @@ var Integrators = {
   // f is a func of time t and state y
   // y is the initial state, t is the time, h is the timestep
   // updated y is returned.
-  var integrate=(m,f,y,t,h)=>{
-    for (var k=[],ki=0; ki<m.length; ki++) {
-      var _y=y.slice(), dt=ki?((m[ki-1][0])*h):0;
-      for (var l=0; l<_y.length; l++) for (var j=1; j<=ki; j++) _y[l]=_y[l]+h*(m[ki-1][j])*(k[ki-1][l]);
+  const integrate=(m,f,y,t,h)=>{
+    let _y;
+    let k;
+    for (k=[],ki=0; ki<m.length; ki++) {
+      _y=y.slice();
+      const dt=ki?((m[ki-1][0])*h):0;
+      for (let l=0; l<_y.length; l++) for (let j=1; j<=ki; j++) _y[l]=_y[l]+h*(m[ki-1][j])*(k[ki-1][l]);
       k[ki]=f(t+dt,_y,dt);
     }
-    for (var r=y.slice(),l=0; l<_y.length; l++) for (var j=0; j<k.length; j++) r[l]=r[l]+h*(k[j][l])*(m[ki-1][j]);
+    let r;
+    for (r=y.slice(),l=0; l<_y.length; l++) for (let j=0; j<k.length; j++) r[l]=r[l]+h*(k[j][l])*(m[ki-1][j]);
     return r;
-  }
-
-  function get_solution(dt, t_final, N, I0, R0, D_incbation, D_infectious, D_recovery_mild, D_hospital_lag, D_recovery_severe, D_death, P_SEVERE, CFR, InterventionTime, InterventionAmt, duration) {
-    var interpolation_steps = 40
-    var fullsteps = Math.ceil(t_final / dt)
-    var steps = fullsteps*interpolation_steps
-    var dt = dt/interpolation_steps
-    var sample_step = interpolation_steps
-    var method = Integrators["RK4"]
-    function f(t, x){
-      // SEIR ODE
-      if (t > InterventionTime && t < InterventionTime + duration){
-        var beta = (InterventionAmt)*R0/(D_infectious)
-      } else if (t > InterventionTime + duration) {
-        var beta = 0.5*R0/(D_infectious)
-      } else {
-        var beta = R0/(D_infectious)
-      }
-      var a     = 1/D_incbation
-      var gamma = 1/D_infectious
-
-      var S        = x[0] // Susectable
-      var E        = x[1] // Exposed
-      var I        = x[2] // Infectious
-      var Mild     = x[3] // Recovering (Mild)
-      var Severe   = x[4] // Recovering (Severe at home)
-      var Severe_H = x[5] // Recovering (Severe in hospital)
-      var Fatal    = x[6] // Recovering (Fatal)
-      var R_Mild   = x[7] // Recovered
-      var R_Severe = x[8] // Recovered
-      var R_Fatal  = x[9] // Dead
-      var p_severe = P_SEVERE
-      var p_fatal  = CFR
-      var p_mild   = 1 - P_SEVERE - CFR
-      var dS        = -beta*I*S
-      var dE        =  beta*I*S - a*E
-      var dI        =  a*E - gamma*I
-      var dMild     =  p_mild*gamma*I   - (1/D_recovery_mild)*Mild
-      var dSevere   =  p_severe*gamma*I - (1/D_hospital_lag)*Severe
-      var dSevere_H =  (1/D_hospital_lag)*Severe - (1/D_recovery_severe)*Severe_H
-      var dFatal    =  p_fatal*gamma*I  - (1/D_death)*Fatal
-      var dR_Mild   =  (1/D_recovery_mild)*Mild
-      var dR_Severe =  (1/D_recovery_severe)*Severe_H
-      var dR_Fatal  =  (1/D_death)*Fatal
-      //      0   1   2   3      4        5          6       7        8          9
-      return [dS, dE, dI, dMild, dSevere, dSevere_H, dFatal, dR_Mild, dR_Severe, dR_Fatal]
-    }
-    var v = [1, 0, I0/(N-I0), 0, 0, 0, 0, 0, 0, 0]
-    var t = 0
-    var P  = []
-    var TI = []
-    var Iters = []
-    while (steps--) {
-      if ((steps+1) % (sample_step) == 0) {
-            //    Dead   Hospital          Recovered        Infected   Exposed
-        P.push([ N*v[9], N*(v[5]+v[6]),  N*(v[7] + v[8]), N*v[2],    N*v[1] ])
-        Iters.push(v)
-        TI.push(N*(1-v[0]))
-        // console.log((v[0] + v[1] + v[2] + v[3] + v[4] + v[5] + v[6] + v[7] + v[8] + v[9]))
-        // console.log(v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , v[6] , v[7] , v[8] , v[9])
-      }
-      v =integrate(method,f,v,t,dt);
-      t+=dt
-    }
-    return {"P": P,
-            "deaths": N*v[6],
-            "total": 1-v[0],
-            "total_infected": TI,
-            "Iters":Iters,
-            "dIters": f}
-  }
-
-  function predict_seir_extended(dt, t_final, N, I0, R0, D_incbation, D_infectious, D_recovery_mild, D_hospital_lag, D_recovery_severe, D_death, P_SEVERE, CFR, InterventionTime, InterventionAmt, duration) {
-    var interpolation_steps = 40
-    var fullsteps = Math.ceil(t_final / dt)
-    var steps = fullsteps*interpolation_steps
-    var dt = dt/interpolation_steps
-    var sample_step = interpolation_steps
-    var method = Integrators["RK4"]
-    function f(t, x){
-      // SEIR ODE
-      if (t > InterventionTime && t < InterventionTime + duration){
-        var beta = (InterventionAmt)/(D_infectious)
-      } else if (t > InterventionTime + duration) {
-        var beta = 0.5*R0/(D_infectious)
-      } else {
-        var beta = R0/(D_infectious)
-      }
-      var a     = 1/D_incbation
-      var gamma = 1/D_infectious
-
-      var S        = x[0] // Susectable
-      var E        = x[1] // Exposed
-      var I        = x[2] // Infectious
-      var Mild     = x[3] // Recovering (Mild)
-      var Severe   = x[4] // Recovering (Severe at home)
-      var Severe_H = x[5] // Recovering (Severe in hospital)
-      var Fatal    = x[6] // Recovering (Fatal)
-      var R_Mild   = x[7] // Recovered
-      var R_Severe = x[8] // Recovered
-      var R_Fatal  = x[9] // Dead
-      var p_severe = P_SEVERE
-      var p_fatal  = CFR
-      var p_mild   = 1 - P_SEVERE - CFR
-      var dS        = -beta*I*S
-      var dE        =  beta*I*S - a*E
-      var dI        =  a*E - gamma*I
-      var dMild     =  p_mild*gamma*I   - (1/D_recovery_mild)*Mild
-      var dSevere   =  p_severe*gamma*I - (1/D_hospital_lag)*Severe
-      var dSevere_H =  (1/D_hospital_lag)*Severe - (1/D_recovery_severe)*Severe_H
-      var dFatal    =  p_fatal*gamma*I  - (1/D_death)*Fatal
-      var dR_Mild   =  (1/D_recovery_mild)*Mild
-      var dR_Severe =  (1/D_recovery_severe)*Severe_H
-      var dR_Fatal  =  (1/D_death)*Fatal
-      //      0   1   2   3      4        5          6       7        8          9
-      return [dS, dE, dI, dMild, dSevere, dSevere_H, dFatal, dR_Mild, dR_Severe, dR_Fatal]
-    }
-    var v = [1, 0, I0/(N-I0), 0, 0, 0, 0, 0, 0, 0]
-    var t = 0
-    var P  = []
-    var TI = []
-    var Iters = []
-    while (steps--) {
-      if ((steps+1) % (sample_step) == 0) {
-            //    Dead   Hospital          Recovered        Infected   Exposed
-        P.push([ N*v[9], N*(v[5]+v[6]),  N*(v[7] + v[8]), N*v[2],    N*v[1] ])
-        Iters.push(v)
-        TI.push(N*(1-v[0]))
-        // console.log((v[0] + v[1] + v[2] + v[3] + v[4] + v[5] + v[6] + v[7] + v[8] + v[9]))
-        // console.log(v[0] , v[1] , v[2] , v[3] , v[4] , v[5] , v[6] , v[7] , v[8] , v[9])
-      }
-      v =integrate(method,f,v,t,dt);
-      t+=dt
-    }
-    return {"P": P,
-            "P_fields": ["Dead", "Hospitalized", "Recovering", "Infectious", "Exposed"],
-            "deaths": N*v[6],
-            "total": 1-v[0],
-            "total_infected": TI,
-            "Iters":Iters,
-            "dIters": f}
-  }
+  };
   
-  function predict_seir(dt, t_final, N, I0, R0, D_incbation, D_infectious, InterventionTime, InterventionAmt, duration) {
-    var interpolation_steps = 40
-    var fullsteps = Math.ceil(t_final / dt)
-    var steps = fullsteps*interpolation_steps
-    var dt = dt/interpolation_steps
-    var sample_step = interpolation_steps
-    var method = Integrators["RK4"]
-    function f(t, x){
-      // SEIR ODE
-      if (t > InterventionTime && t < InterventionTime + duration){
-        var beta = (InterventionAmt)*R0/(D_infectious)
-      } else if (t > InterventionTime + duration) {
-        var beta = 0.5*R0/(D_infectious)
-      } else {
-        var beta = R0/(D_infectious)
-      }
-      var a     = 1/D_incbation
-      var gamma = 1/D_infectious
-
-      var S        = x[0] // Susectable
-      var E        = x[1] // Exposed
-      var I        = x[2] // Infectious
-      var R        = x[3] // Recovering
-      var dS        = -beta*I*S
-      var dE        =  beta*I*S - a*E
-      var dI        =  a*E - gamma*I
-      var dR        =  gamma*I
-      //      0   1   2   3
-      return [dS, dE, dI, dR]
+  function predict(model, model_para, simulation_para, population_para, InterventionTime, InterventionDuration, InterventionAmt)
+  {
+    if (model === "seird")
+    {
+      return predict_seird(simulation_para, model_para, population_para, InterventionTime, InterventionDuration, InterventionAmt);
     }
-    var v = [1, 0, I0/(N-I0), 0]
-    var t = 0
-    var P  = []
-    var TI = []
-    var Iters = []
-    while (steps--) {
-      if ((steps+1) % (sample_step) == 0) {
-            //   Exposed  Infectious Recovering
-        P.push([ N*v[1], N*v[2], N*v[3] ])
-        Iters.push(v)
-        TI.push(N*(1-v[0]))
+    else if(model === "seird_extended")
+    {
+      return predict_seird_ext(simulation_para, model_para, population_para, InterventionTime, InterventionDuration, InterventionAmt);
+    }
+    else // fallback: seir with default para
+    {
+      console.log("Wrong Model!");
+      return predict_seird(simulation_para, model_para, population_para, InterventionTime, InterventionDuration, InterventionAmt);
+    }
+  }
+
+
+
+  function predict_seird(simulation_para, model_para, population_para, InterventionTime, InterventionDuration, InterventionAmt)
+  {
+    const interpolation_steps = 40;
+    const fullsteps = Math.ceil(simulation_para.t_final / simulation_para.dt);
+    let steps = fullsteps*interpolation_steps;
+    console.log(steps);
+    const dt = simulation_para.dt/interpolation_steps;
+    const sample_step = interpolation_steps;
+    const method = Integrators["RK4"];
+
+    function odefun(t, x)
+    {
+      // SEIRD ODE
+      let beta;
+      if (t > InterventionTime && t < InterventionTime + InterventionDuration){
+        beta = (InterventionAmt)/(model_para.D_infectious);
+      } else if (t > InterventionTime + InterventionDuration) {
+        beta = 0.5*model_para.R0/(model_para.D_infectious);
+      } else {
+        beta = model_para.R0/(model_para.D_infectious);
       }
-      v =integrate(method,f,v,t,dt);
+      const a     = 1/model_para.D_incubation;
+      const gamma = 1/model_para.D_infectious;
+
+      const S        = x[0]; // Susceptible
+      const E        = x[1]; // Exposed
+      const I        = x[2]; // Infectious
+      const F        = x[3]; // Fatal
+      // var R       = x[4] // Recovered
+
+      const p_fatal  = model_para.cfr;
+
+      const dS        = -beta*I*S;
+      const dE        =  beta*I*S - a*E;
+      const dI        =  a*E - gamma*I;
+      const dFatal    =  p_fatal*gamma*I;
+      const dR        = (1 - p_fatal) * gamma * I;
+
+      //      0   1   2   3      4
+      return [dS, dE, dI, dFatal, dR]
+    }
+
+    let v = [1, 0, population_para.I0/(population_para.N-population_para.I0), 0, 0];
+
+    let t = 0;
+    let PI  = [];
+    let PR  = [];
+    let PD  = [];
+    let TI = [];
+
+    while (steps--)
+    {
+      if ((steps+1) % (sample_step) === 0)
+      {
+        PI.push(population_para.N * v[2]);  // Infected
+        PR.push(population_para.N * v[4]);  // Recovered
+        PD.push(population_para.N * v[3]);  // Dead
+
+        TI.push(population_para.N*(1-v[0]))
+      }
+      v =integrate(method,odefun,v,t,dt);
       t+=dt
     }
-    return {"P": P,
-            "P_fields": ["Exposed", "Infectious", "Recovering"],
-            "total": 1-v[0],
-            "total_infected": TI,
-            "Iters":Iters,
-            "dIters": f}
+    return {
+      "Infected": PI,
+      "Recovered": PR,
+      "Dead": PD,
+      "total_deaths": population_para.N*v[3],
+      "total_infected": TI
+    }
+  }
+
+  function predict_seird_ext(simulation_para, model_para, population_para, InterventionTime, InterventionDuration, InterventionAmt)
+  {
+    const interpolation_steps = 40;
+    const fullsteps = Math.ceil(simulation_para.t_final / simulation_para.dt);
+    console.log(fullsteps);
+    let steps = fullsteps*interpolation_steps;
+    const dt = simulation_para.dt/interpolation_steps;
+    const sample_step = interpolation_steps;
+    const method = Integrators["RK4"];
+
+    function odefun(t, x)
+    {
+      // SEIR ODE
+      let beta;
+      if (t > InterventionTime && t < InterventionTime + InterventionDuration){
+        beta = (InterventionAmt)/(model_para.D_infectious)
+      } else if (t > InterventionTime + InterventionDuration) {
+        beta = 0.5*model_para.R0/(model_para.D_infectious)
+      } else {
+        beta = model_para.R0/(model_para.D_infectious)
+      }
+      const a     = 1/model_para.D_incubation;
+      const gamma = 1/model_para.D_infectious;
+
+      const S        = x[0]; // Susectable
+      const E        = x[1]; // Exposed
+      const I        = x[2]; // Infectious
+      const Mild     = x[3]; // Recovering (Mild)
+      const Severe   = x[4]; // Recovering (Severe at home)
+      const Severe_H = x[5]; // Recovering (Severe in hospital)
+      const Fatal    = x[6]; // Recovering (Fatal)
+      // var R_Mild   = x[7] // Recovered
+      // var R_Severe = x[8] // Recovered
+      // var R_Fatal  = x[9] // Dead
+
+      const p_severe = model_para.p_severe;
+      const p_fatal  = model_para.cfr;
+      const p_mild   = 1 - p_severe - p_fatal;
+
+      const dS        = -beta*I*S;
+      const dE        =  beta*I*S - a*E;
+      const dI        =  a*E - gamma*I;
+      const dMild     =  p_mild*gamma*I   - (1/model_para.D_recovery_mild)*Mild;
+      const dSevere   =  p_severe*gamma*I - (1/model_para.D_hospital_lag)*Severe;
+      const dSevere_H =  (1/model_para.D_hospital_lag)*Severe - (1/model_para.D_recovery_severe)*Severe_H;
+      const dFatal    =  p_fatal*gamma*I  - (1/model_para.D_death)*Fatal;
+      const dR_Mild   =  (1/model_para.D_recovery_mild)*Mild;
+      const dR_Severe =  (1/model_para.D_recovery_severe)*Severe_H;
+      const dR_Fatal  =  (1/model_para.D_death)*Fatal;
+      //      0   1   2   3      4        5          6       7        8          9
+      return [dS, dE, dI, dMild, dSevere, dSevere_H, dFatal, dR_Mild, dR_Severe, dR_Fatal]
+    }
+
+    let v = [1, 0, population_para.I0/(population_para.N-population_para.I0), 0, 0, 0, 0, 0, 0, 0];
+    let t = 0;
+    let PI  = [];
+    let PR  = [];
+    let PD  = [];
+    let TI = [];
+
+    while (steps--) {
+      if ((steps+1) % (sample_step) === 0)
+      {
+        PI.push(population_para.N * v[2]);           // Infected
+        PR.push(population_para.N * (v[7] + v[8]));  // Recovered
+        PD.push(population_para.N * v[9]);           // Dead
+
+        TI.push(population_para.N*(1-v[0]))
+      }
+      v =integrate(method,odefun,v,t,dt);
+      t+=dt
+    }
+    return {
+      "Infected": PI,
+      "Recovered": PR,
+      "Dead": PD,
+      "total_deaths": population_para.N*v[6],
+      "total_infected": TI
+    }
   }
