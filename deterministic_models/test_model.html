@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="model.js"></script>
+
+</head>
+<body>
+    <h1>SEIR Model</h1>
+    <button id="compute" style="undbackground-color: aliceblue">Compute</button>
+    <div id="results"></div>
+</body>
+
+<script>
+    function update(){
+        var TimeToDeath = 32;
+        var dt = 2.0;
+        var N = 86.0e6;
+        var I0 = 1.0;
+        var R0 = 3.0;
+        var D_incbation = 5.2;
+        var D_infectious = 2.9;
+        var D_recovery_mild = (14 - 2.9);
+        var D_recovery_severe = (31.5 - 2.9);
+        var D_hospital_lag = 5;
+        var D_death = TimeToDeath - D_infectious;
+        var P_SEVERE = 0.2;
+        var CFR = 0.02;
+        var InterventionTime = 100;
+        var InterventionAmt = 1/3;
+        var duration = 7*12*1e10;
+        var t_final = 365.0;
+
+        results = get_solution(dt, t_final, N, I0, R0, D_incbation, D_infectious, D_recovery_mild, D_hospital_lag,
+            D_recovery_severe, D_death, P_SEVERE, CFR, InterventionTime, InterventionAmt, duration);
+
+        var show_steps = 100;
+        P = results["P"];
+
+        var tt = [];
+        var H = [];
+        var E = [];
+        var I = [];
+        var R = [];
+
+        for (var i = 0; i < 365 / dt; i++) {
+            tt.push(dt * i);
+            H.push(P[i][1]);
+            E.push(P[i][4]);
+            I.push(P[i][3]);
+            R.push(P[i][2]);
+        }
+
+        var t = tt.slice(0, show_steps);
+
+        var LH = {
+            x: t,
+            y: H,
+            type: 'scatter',
+            name: 'Hospitalized'
+        };
+
+
+        var LE = {
+            x: t,
+            y: E,
+            type: 'scatter',
+            name: 'Exposed'
+        };
+
+        var LI = {
+            x: t,
+            y: I,
+            type: 'scatter',
+            name: 'Infected'
+        };
+
+        var LR = {
+            x: t,
+            y: R,
+            type: 'scatter',
+            name: 'Recovered'
+        };
+
+        var LD = {
+            x: t,
+            y: results.deaths,
+            type: 'scatter',
+            name: 'Death'
+        };
+
+
+        var data = [LH, LE, LI, LR, LD];
+
+        Plotly.newPlot('results', data);
+    }
+
+    compute = document.getElementById("compute");
+    compute.onclick = update;
+</script>
+</html>
