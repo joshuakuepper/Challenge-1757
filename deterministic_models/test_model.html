@@ -15,12 +15,15 @@
 </body>
 
 <script>
+    var R0 = 3.0;
+    var R00 = R0;
+    var T0 = 364;
     function update(){
         var TimeToDeath = 32;
         var dt = 2.0;
         var N = 86.0e6;
         var I0 = 1.0;
-        var R0 = 3.0;
+        
         var D_incbation = 5.2;
         var D_infectious = 2.9;
         var D_recovery_mild = (14 - 2.9);
@@ -29,8 +32,8 @@
         var D_death = TimeToDeath - D_infectious;
         var P_SEVERE = 0.2;
         var CFR = 0.02;
-        var InterventionTime = 100;
-        var InterventionAmt = 1/3;
+        var InterventionTime = T0;
+        var InterventionAmt = R00;
         var duration = 7*12*1e10;
         var t_final = 365.0;
 
@@ -97,7 +100,48 @@
 
         Plotly.newPlot('results', data);
     }
+    (function () {
+        function init() {
+            var r0 = document.querySelector('#r0');
+            r0.addEventListener('input', showR0);
+            showR0();
+            r0.addEventListener('input', update);
+            update();
+        };
 
+        function showR0() {
+            //var imageElement = document.querySelector('#image');
+            var rr0 = document.querySelector('#r0');
+            R00 = rr0.value/10;
+            //console.log(R0)
+
+            return false;
+        };
+        document.addEventListener("DOMContentLoaded", function () {
+            init();
+        });
+    }());
+        (function () {
+        function init() {
+            var t0 = document.querySelector('#t0');
+            t0.addEventListener('input', showT0);
+            showT0();
+            t0.addEventListener('input', update);
+            update();
+        };
+
+        function showT0() {
+            //var imageElement = document.querySelector('#image');
+            var tt0 = document.querySelector('#t0');
+            T0 = tt0.value;
+            console.log(T0)
+
+            return false;
+        };
+        document.addEventListener("DOMContentLoaded", function () {
+            init();
+        });
+    }());
     compute = document.getElementById("compute");
     compute.onclick = update;
 </script>
