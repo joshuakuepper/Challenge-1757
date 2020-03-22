@@ -16,7 +16,7 @@
     </figure>
     <figure>
         <label for="t0">Intervention</label>
-        <input id="t0" type="range" min="0" max="200" value="364"/>
+        <input id="t0" type="range" min="0" max="200" value="150"/>
     </figure>
     <button id="compute" style="undbackground-color: aliceblue">Compute</button>
 
@@ -31,7 +31,7 @@
 <script>
     const R0_default = 3.0;
     let InterventionAmt = R0_default;
-    let InterventionTime = 150;
+    let InterventionTime = 50;
 
     function update(){
 
@@ -72,9 +72,9 @@
         const InterventionDuration = 7*12*1e10;
 
         const results_simple = predict("seird", SEIRD_parameters, simulation_parameters, population_parameters,
-            InterventionTime, InterventionAmt, InterventionDuration);
+            InterventionTime, InterventionDuration, InterventionAmt);
         const results_ext = predict("seird_extended", SEIRD_extended_parameters, simulation_parameters,
-            population_parameters, InterventionTime, InterventionAmt, InterventionDuration);
+            population_parameters, InterventionTime, InterventionDuration, InterventionAmt);
 
         let tt = [];
 

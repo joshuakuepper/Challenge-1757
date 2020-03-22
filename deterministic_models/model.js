@@ -132,11 +132,11 @@ const Integrators = {
       // SEIR ODE
       let beta;
       if (t > InterventionTime && t < InterventionTime + InterventionDuration){
-        beta = (InterventionAmt)/(model_para.D_infectious)
+        beta = (InterventionAmt)/(model_para.D_infectious);
       } else if (t > InterventionTime + InterventionDuration) {
-        beta = 0.5*model_para.R0/(model_para.D_infectious)
+        beta = 0.5*model_para.R0/(model_para.D_infectious);
       } else {
-        beta = model_para.R0/(model_para.D_infectious)
+        beta = model_para.R0/(model_para.D_infectious);
       }
       const a     = 1/model_para.D_incubation;
       const gamma = 1/model_para.D_infectious;
