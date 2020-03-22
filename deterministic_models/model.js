@@ -102,7 +102,7 @@ var Integrators = {
     function f(t, x){
       // SEIR ODE
       if (t > InterventionTime && t < InterventionTime + duration){
-        var beta = (InterventionAmt)*R0/(D_infectious)
+        var beta = (InterventionAmt)/(D_infectious)
       } else if (t > InterventionTime + duration) {
         var beta = 0.5*R0/(D_infectious)
       } else {
@@ -162,7 +162,7 @@ var Integrators = {
             "Iters":Iters,
             "dIters": f}
   }
-
+  
   function predict_seir(dt, t_final, N, I0, R0, D_incbation, D_infectious, InterventionTime, InterventionAmt, duration) {
     var interpolation_steps = 40
     var fullsteps = Math.ceil(t_final / dt)
