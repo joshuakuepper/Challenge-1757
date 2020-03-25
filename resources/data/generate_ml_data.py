@@ -1,11 +1,15 @@
 import sys
 sys.path.insert(1, "../../")
 
-from utils.get_data_from_mongodb import DBConnection
+from utils.get_data_from_api import get_cases, get_measures
 
 import pandas as pd
 import numpy as np
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
+import functools
+
+def conjunction(*conditions):
+    return functools.reduce(np.logical_and, conditions)
 
 def preprocess_data(df, population):
     # calculate N3
@@ -131,4 +135,116 @@ def save_data():
     df = get_data()
     df.to_csv("db_data_ml.csv")
 
-save_data()
+def get_simple_R0_data(not_needed_cols=None, measures_list=None, source=None):
+
+    if not_needed_cols is None:
+        not_needed_cols = ["Unnamed: 0", "_id", "sourceFull", "actions"]
+
+    if measures_list is None:
+        measures_list = ["schools_closed",
+                         "traveller_quarantine",
+                         "border_control",
+                         "closure_leisureandbars",
+                         "lockdown",
+                         "home_office",
+                         "primary_residence",
+                         "test_limitations"]
+
+    if source is None:
+        source = ["JHU", "RKI"]
+
+    cases = pd.read_csv("cases.csv")
+    measures = pd.read_csv("measures.csv")
+
+    # filter data shuffle around
+    cases = cases[cases["source"].isin(source)]
+    # convert array to str for now
+    region_0 = []
+    region_1 = []
+    for value in cases.adm.values.tolist():
+        if str(value) == 'nan':
+            region_0.append(-999)
+            region_1.append(-999)
+            continue
+        value = value.replace("]", "").replace("[", "").replace("\'", "").split(",")
+        region_0.append(value[0])
+        region_1.append(value[1])
+    cases['region_0'] = region_0
+    cases['region_1'] = region_1
+    del cases['adm']
+
+    # convert array to str for now
+    region_0 = []
+    region_1 = []
+    region_2 = []
+    for value in measures.adm.values.tolist():
+        value = value.replace("]", "").replace("[", "").replace("\'", "").split(",")
+        if value[0] == "":
+            region_0.append(-999)
+            region_1.append(-999)
+            region_2.append(-999)
+            continue
+        region_0.append(value[0])
+        region_1.append(value[1])
+        region_2.append(value[1])
+    measures['region_0'] = region_0
+    measures['region_1'] = region_1
+    measures['region_2'] = region_2
+    del measures['adm']
+
+    # convert time into days in numbers from 2020-01-01
+    FMT = '%Y-%m-%d %H:%M:%S%z'
+    for df in [cases, measures]:
+        date = df['date']
+        df['date'] = date.map(
+            lambda x: (datetime.strptime(str(x), FMT) - datetime.strptime("2020-01-01 00:00:00+00:00", FMT)).days)
+
+    # remove not needed columns
+    for col in not_needed_cols:
+        try:
+            del cases[col]
+        except:
+            print("Column {} not in dataset cases".format(col))
+        try:
+            del measures[col]
+        except:
+            print("Column {} not in dataset measures".format(col))
+
+    # filter data if there is no region
+    cases = cases[cases["region_0"] != -999]
+    measures = measures[measures["region_0"] != -999]
+
+    # create empty columns
+    for measure in measures_list:
+        cases[measure + "_first_event"] = -999
+
+    # # find date per country when measure was first taken
+    # first_time_per_measure = []
+    # for measure in measures_list:
+    #     tmp_measure = []
+    #     for idx, row in cases.iterrows():
+    #         region_0_cut = measures["region_0"] == row["region_0"]
+    #         measure_cut = measures[measure] == 1.0
+    #         tmp_measure.append(np.min(measures[conjunction(region_0_cut, measure_cut)]["date"]))
+    #     first_time_per_measure.append(tmp_measure)
+    # np.save("first_time_per_measure", first_time_per_measure)
+    first_time_per_measure = np.load("first_time_per_measure.npy")
+    print(cases, measures, first_time_per_measure)
+
+not_needed_cols=["Unnamed: 0", "_id", "sourceFull", "actions"]
+measures_list=["schools_closed",
+               "traveller_quarantine",
+               "border_control",
+               "closure_leisureandbars",
+               "lockdown",
+               "home_office",
+               "primary_residence",
+               "test_limitations"]
+source = ["JHU"]
+
+get_simple_R0_data(not_needed_cols, measures_list, source)
+
+
+
+# get_cases().to_csv("cases.csv")
+# get_measures().to_csv("measures.csv")
