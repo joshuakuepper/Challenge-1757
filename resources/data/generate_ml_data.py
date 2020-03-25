@@ -99,7 +99,7 @@ def con_db():
     population = pd.read_excel("http://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel", header=None)
     population = population.iloc[3:]
     headers = population.iloc[0]
-    population  = pd.DataFrame(population.values[1:], columns=headers)
+    population = pd.DataFrame(population.values[1:], columns=headers)
 
     # convert array to str for now
     area1_list = []

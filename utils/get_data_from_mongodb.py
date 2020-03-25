@@ -21,7 +21,7 @@ class DBConnection:
 
 collections = [
     'cases',
-    'mesures',
+    'mesures'
 ]
 conn = DBConnection()
 statsdb = conn.getStatisticDB()
@@ -31,4 +31,5 @@ data = [
     for col in collections
 ]
 cases, measures = data
+print(cases)
 # cases.to_csv('cases.csv', index=False)
