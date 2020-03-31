@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="prediction.js"></script>
+
+</head>
+<body>
+    <h1>Simulation Parameters</h1>
+    <div id="ModelParameters">
+        <input id="I0" style="width: 20em" type="range" min="1" max="100" value="1"/>
+        <span style="width: 2em;"></span>
+        <label for="I0" style="background: azure">I0 : <span id="I0_text">1</span></label>
+        <br><br>
+
+        <input id="R0" style="width: 20em" type="range" min="0" max="100" value="38"/>
+        <span style="width: 2em;"></span>
+        <label for="R0" style="background: azure">Initial R0 : <span id="R0_text">1</span></label>
+        <br><br>
+
+        <input id="InterventionR0" style="width: 20em" type="range" min="0" max="100" value="8"/>
+        <span style="width: 2em;"></span>
+        <label for="InterventionR0" style="background: azure">R0 after intervention : <span id="InterventionR0_text">1</span></label>
+        <br><br>
+
+        <input id="AfterInterventionR0" style="width: 20em" type="range" min="0" max="100" value="14"/>
+        <span style="width: 2em;"></span>
+        <label for="AfterInterventionR0" style="background: azure">R0 after intervention stopped: <span id="AfterInterventionR0_text">1</span></label>
+        <br><br>
+
+        <input id="InterventionTime" style="width: 20em" type="range" min="0" max="180" value="30"/>
+        <span style="width: 2em;"></span>
+        <label for="InterventionTime" style="background: azure">Start of intervention : <span id="InterventionTime_text">1</span></label>
+        <br><br>
+
+        <input id="InterventionDuration" style="width: 20em" type="range" min="0" max="365" value="180"/>
+        <span style="width: 2em;"></span>
+        <label for="InterventionDuration" style="background: azure">Duration of intervention : <span id="InterventionDuration_text">1</span></label>
+        <br><br>
+
+        Plot scale: <input type="radio" id="plot_linear" name="plot_scale" value="linear" checked="True">
+        <label for="plot_linear">linear</label>
+        <input type="radio" id="plot_log" name="plot_scale" value="log">
+        <label for="plot_log">log</label>
+    </div>
+
+    <h2>Prediction</h2>
+    <div id="prediction_plot"></div>
+
+    </body>
+
+<script>
+    let R0 = 3.8;
+    let InterventionR0 = 0.8;
+    let AfterInterventionR0 = 1.4;
+    let InterventionTime = 30;
+    let InterventionDuration = 180;
+    let I0 = 1;
+    let plotscale = "linear";
+
+
+    function update(){
+
+        const simulation_parameters = {
+            dt: 1.0,
+            t_final: 2*365.0
+        };
+
+        let population_parameters = {
+            N: 86.0e6,
+            I0: I0
+        };
+
+        const model_parameters = {
+            R0: R0,
+            D_infectious: 10,
+            D_incubation: 2,
+            cfr: 0.0056,
+            D_recovery_mild: 9,
+            D_recovery_severe: 14,
+            D_hospital_lag: 4,
+            D_death: 10,
+            p_severe: 0.039
+        };
+
+        const prediction = predict(model_parameters, simulation_parameters,
+            population_parameters, InterventionTime, InterventionDuration, R0, R0);
+
+        const prediction_intervention = predict(model_parameters, simulation_parameters,
+            population_parameters, InterventionTime, InterventionDuration, InterventionR0, AfterInterventionR0);
+
+        let tt = [];
+
+        for (let i = 0; i < simulation_parameters.t_final / simulation_parameters.dt; i++) {
+            tt.push(simulation_parameters.dt * i);
+        }
+
+        const line_width = 2;
+
+        let PI_intervention = {
+            x: tt,
+            y: prediction_intervention.Infectious,
+            type: 'scatter',
+            name: 'Infectious',
+            mode: 'lines',
+            line: {
+                color: 'rgb(252, 169, 3)',
+                width: line_width
+            }
+        };
+
+        let PI = {
+            x: tt,
+            y: prediction.Infectious,
+            type: 'scatter',
+            name: 'Infectious (no intervention)',
+            mode: 'lines',
+            line: {
+                dash: 'dot',
+                color: 'rgb(252, 169, 3)',
+                width: line_width
+            }
+        };
+
+        let PH_intervention = {
+            x: tt,
+            y: prediction_intervention.Hospitalized,
+            type: 'scatter',
+            name: 'Hospitalized',
+            mode: 'lines',
+            line: {
+                color: 'rgb(252,16,158)',
+                width: line_width
+            }
+        };
+
+        let PH = {
+            x: tt,
+            y: prediction.Hospitalized,
+            type: 'scatter',
+            name: 'Hospitalized (no intervention)',
+            mode: 'lines',
+            line: {
+                dash: 'dot',
+                color: 'rgb(252,16,158)',
+                width: line_width
+            }
+        };
+
+        let PR_intervention = {
+            x: tt,
+            y: prediction_intervention.Recovered,
+            type: 'scatter',
+            name: 'Recovered',
+            mode: 'lines',
+            line: {
+                color: 'rgb(28, 128, 28)',
+                width: line_width
+            }
+        };
+
+        let PR = {
+            x: tt,
+            y: prediction.Recovered,
+            type: 'scatter',
+            name: 'Recovered (no intervention)',
+            mode: 'lines',
+            line: {
+                dash: 'dot',
+                color: 'rgb(28, 138, 28)',
+                width: line_width
+            }
+        };
+
+        let PD_intervention = {
+            x: tt,
+            y: prediction_intervention.Deceased,
+            type: 'scatter',
+            name: 'Deceased',
+            mode: 'lines',
+            line: {
+                color: 'rgb(203,20,24)',
+                width: line_width
+            }
+        };
+
+        let PD = {
+            x: tt,
+            y: prediction.Deceased,
+            type: 'scatter',
+            name: 'Deceased (no intervention)',
+            mode: 'lines',
+            line: {
+                dash: 'dot',
+                color: 'rgb(203,20,24)',
+                width: line_width
+            }
+        };
+
+        let yaxis_style;
+        if (plotscale === "linear")
+        {
+            yaxis_style = { type: "linear", range: [0, population_parameters.N*1.01]};
+        }
+        else
+        {
+            yaxis_style = { type: "log", range: [0, 8.5]};
+        }
+        let intervention_end = Math.min(simulation_parameters.t_final, InterventionTime + InterventionDuration);
+        var plot_layout = {
+            yaxis: yaxis_style,
+          shapes: [
+              {
+                type: 'line',
+                x0: InterventionTime,
+                y0: 0,
+                x1: InterventionTime,
+                yref: 'paper',
+                y1: 1,
+                line: {
+                  color: 'grey',
+                  width: 2.5,
+                }
+              },
+              {
+                type: 'line',
+                x0: intervention_end,
+                y0: 0,
+                x1: intervention_end,
+                yref: 'paper',
+                y1: 1,
+                line: {
+                  color: 'grey',
+                  width: 2.5,
+                }
+              }
+          ],
+          title: 'Predictions (with intervention - /without intervention ..)'
+        };
+
+
+
+        let plot_data = [PI, PI_intervention, PH, PH_intervention, PR, PR_intervention, PD, PD_intervention];
+        Plotly.newPlot('prediction_plot', plot_data, plot_layout);
+
+    }
+    (function () {
+        function InitialR0_init() {
+            let r0 = document.querySelector('#R0');
+            r0.addEventListener('input', InitialR0_update);
+            InitialR0_update();
+            r0.addEventListener('input', update);
+            update();
+        }
+
+        function InitialR0_update() {
+            let r0 = document.querySelector('#R0');
+            R0 = r0.value/10;
+            document.getElementById("R0_text").textContent = R0;
+            return false;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            InitialR0_init();
+        });
+    }());
+
+    (function () {
+        function InterventionR0_init() {
+            let r0 = document.querySelector('#InterventionR0');
+            r0.addEventListener('input', InterventionR0_update);
+            InterventionR0_update();
+            r0.addEventListener('input', update);
+            update();
+        }
+
+        function InterventionR0_update() {
+            let r0 = document.querySelector('#InterventionR0');
+            InterventionR0 = r0.value/10;
+            document.getElementById("InterventionR0_text").textContent = InterventionR0;
+            return false;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            InterventionR0_init();
+        });
+    }());
+
+    (function () {
+        function AfterInterventionR0_init() {
+            let r0 = document.querySelector('#AfterInterventionR0');
+            r0.addEventListener('input', AfterInterventionR0_update);
+            AfterInterventionR0_update();
+            r0.addEventListener('input', update);
+            update();
+        }
+
+        function AfterInterventionR0_update() {
+            let r0 = document.querySelector('#AfterInterventionR0');
+            AfterInterventionR0 = r0.value/10;
+            document.getElementById("AfterInterventionR0_text").textContent = AfterInterventionR0;
+            return false;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            AfterInterventionR0_init();
+        });
+    }());
+    (function () {
+        function I0_init() {
+            let ii0 = document.querySelector('#I0');
+            ii0.addEventListener('input', I0_update);
+            I0_update();
+            ii0.addEventListener('input', update);
+            update();
+        }
+
+        function I0_update() {
+            let ii0 = document.querySelector('#I0');
+            I0 = parseFloat(ii0.value);
+            document.getElementById("I0_text").textContent = I0;
+            return false;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            I0_init();
+        });
+    }());
+
+    (function () {
+        function InterventionTime_init() {
+            let it = document.querySelector('#InterventionTime');
+            it.addEventListener('input', InterventionTime_update);
+            InterventionTime_update();
+            it.addEventListener('input', update);
+            update();
+        }
+
+        function InterventionTime_update() {
+            let it = document.querySelector('#InterventionTime');
+            InterventionTime = parseFloat(it.value);
+            document.getElementById("InterventionTime_text").textContent = InterventionTime;
+            return false;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            InterventionTime_init();
+        });
+    }());
+
+    (function () {
+        function InterventionDuration_init() {
+            let id = document.querySelector('#InterventionDuration');
+            id.addEventListener('input', InterventionDuration_update);
+            InterventionDuration_update();
+            id.addEventListener('input', update);
+            update();
+        }
+
+        function InterventionDuration_update() {
+            let id = document.querySelector('#InterventionDuration');
+            InterventionDuration = parseFloat(id.value);
+            document.getElementById("InterventionDuration_text").textContent = InterventionDuration;
+            return false;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            InterventionDuration_init();
+        });
+    }());
+    (function () {
+        function PlotLogScale_init() {
+            let ps = document.querySelector('#plot_log');
+            ps.addEventListener('input', PlotLogScale_update);
+            PlotLogScale_update();
+            ps.addEventListener('input', update);
+            update();
+        }
+
+        function PlotLogScale_update() {
+            plotscale = "log";
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            PlotLogScale_init();
+        });
+    }());
+
+    (function () {
+        function PlotLinearScale_init() {
+            let ps = document.querySelector('#plot_linear');
+            ps.addEventListener('input', PlotLinearScale_update);
+            PlotLinearScale_update();
+            ps.addEventListener('input', update);
+            update();
+        }
+
+        function PlotLinearScale_update() {
+            plotscale = "linear";
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            PlotLinearScale_init();
+        });
+    }());
+
+</script>
+</html>
