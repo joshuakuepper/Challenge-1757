@@ -1,0 +1,107 @@
+%% Creator: Inkscape 1.0beta2 (2b71d25, 2019-12-03), www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'CovidSEIR.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{858.42591774bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.68083549)%
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{CovidSEIR.pdf}}%
+    \put(0.68596217,0.02598506){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}D\end{tabular}}}}%
+    \put(0.72050965,0.02717687){\color[rgb]{0.14117647,0.12156863,0.10980392}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Deceased\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{CovidSEIR.pdf}}%
+    \put(0.18795724,0.02598506){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}R\end{tabular}}}}%
+    \put(0.22250472,0.02717687){\color[rgb]{0,0.50196078,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Recovered\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{CovidSEIR.pdf}}%
+    \put(0.68596191,0.27158664){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}F\end{tabular}}}}%
+    \put(0.72050939,0.27277846){\color[rgb]{0.33333333,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Fatal\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{CovidSEIR.pdf}}%
+    \put(0.35395864,0.1483019){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}H\end{tabular}}}}%
+    \put(0.38850612,0.14949372){\color[rgb]{1,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Hospital\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{CovidSEIR.pdf}}%
+    \put(0.35395881,0.27119684){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}S\end{tabular}}}}%
+    \put(0.38850629,0.27238865){\color[rgb]{1,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Severe\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{CovidSEIR.pdf}}%
+    \put(0.02545061,0.27061886){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}M\end{tabular}}}}%
+    \put(0.0599981,0.27181067){\color[rgb]{0.53333333,0.66666667,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Mild\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{CovidSEIR.pdf}}%
+    \put(0.3557062,0.39293578){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}I\\\end{tabular}}}}%
+    \put(0.38850629,0.39412759){\color[rgb]{0.83137255,0.33333333,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Infectious\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{CovidSEIR.pdf}}%
+    \put(0.35395887,0.51525266){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}E\end{tabular}}}}%
+    \put(0.3826,0.51646435){\color[rgb]{0.83137255,0.66666667,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Exposed\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{CovidSEIR.pdf}}%
+    \put(0.35395887,0.63756957){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}S\end{tabular}}}}%
+    \put(0.3840946,0.64096725){\color[rgb]{0,0,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Susceptible\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{CovidSEIR.pdf}}%
+    \put(0.56090896,0.62178453){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$R_0$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=11]{CovidSEIR.pdf}}%
+    \put(0.67628466,0.62186903){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$T_i$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=12]{CovidSEIR.pdf}}%
+    \put(0.56384564,0.49715364){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$T_{inc}$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=13]{CovidSEIR.pdf}}%
+    \put(0.56265633,0.30809119){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$p_s$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=14]{CovidSEIR.pdf}}%
+    \put(0.56090887,0.3867235){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$T_i$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=15]{CovidSEIR.pdf}}%
+    \put(0.08037825,0.38672349){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$p_m$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=16]{CovidSEIR.pdf}}%
+    \put(0.74962716,0.39021825){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$p_f$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=17]{CovidSEIR.pdf}}%
+    \put(0.56090872,0.24169058){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$T_h$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=18]{CovidSEIR.pdf}}%
+    \put(0.55916156,0.11675262){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$T_{rs}$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=19]{CovidSEIR.pdf}}%
+    \put(0.18185857,0.20786823){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$T_{rm}$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=20]{CovidSEIR.pdf}}%
+    \put(0.81078483,0.17528996){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$T_d$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=21]{CovidSEIR.pdf}}%
+  \end{picture}%
+\endgroup%

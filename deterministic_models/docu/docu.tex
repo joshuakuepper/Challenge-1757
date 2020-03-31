@@ -1,0 +1,119 @@
+\documentclass[a4, 12pt, colorinlistoftodos]{scrartcl}
+\usepackage[left=1cm,right=1cm,top=1.5cm,bottom=1cm]{geometry} 
+\setlength{\marginparwidth}{4cm}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{moreverb}
+
+\renewcommand{\topfraction}{0.999}
+\renewcommand{\bottomfraction}{0.999}
+\renewcommand{\floatpagefraction}{0.999}
+\renewcommand{\textfraction}{0.001}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{csquotes}
+\usepackage{epsfig}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{import}
+\usepackage{mwe}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.9}
+\usepackage{pdfpages}
+\usepackage{xcolor}
+
+% Include Inkscape Figures
+\newcommand{\incfig}[2][\columnwidth]{%
+	\def\svgwidth{#1}%
+	\import{./figures/}{#2.pdf_tex}%
+}
+
+% Refine Chapter/Section/Subsection layout
+\setcounter{secnumdepth}{2}
+
+\title{A Compartmental Model for SARS-CoV-2}
+\author{Dominik Linn \footnote{dominik.linn\@ itwm.fraunhofer.de}}
+\date{\today}
+
+\usepackage[backend=bibtex, natbib=true, style=numeric]{biblatex}
+\addbibresource{citations}
+
+\begin{document}
+	
+	% Generate title page
+	\maketitle
+	
+	% Generate table of contents
+	% {\let\cleardoublepage\relax \tableofcontents}
+	% \clearpage
+	
+	Data and model (simplified) based on \cite{RKI_Corona2020}.
+	
+	\subsection*{Parameters}
+	\begin{center}
+		\begin{tabular}{c | c | c}
+			\textbf{Parameter} & \textbf{Description} & \textbf{Reference Value} \\ \hline
+			$R_0$ & Basic reproduction number & 2(RKI, optimistic),  3-4  \\
+			$T_i$ & Average infectious period & 9-10  days\\
+			$T_{inc}$ &  Average incubation period & 2  days\\
+			$T_{rm}$ & Recovery period (mild cases) & 9  days\\
+			$T_{rs}$ & Recovery period (severe cases) & 14 days\\
+			$T_{h}$ & Hospitalization lag& 3-4  days\\
+			$T_{d}$ & Death lag & 10  days \\
+			$p_m$ & Mild probability  & 95.54\%\\
+			$p_s$ & Severe probability & 3.9\%\\
+			$p_f$ & Fatal probability (CFR) &  0.56\%
+		\end{tabular}
+	\end{center}
+	
+	\subsection*{ODE Model}
+	\begin{align}\label{eqn:SEIR_extended}
+		\frac{d}{dt}\begin{bmatrix}
+			S \\
+			E \\
+			I \\
+			M \\
+			\Sigma \\
+			H \\
+			F \\
+			R \\
+			D
+		\end{bmatrix}
+		&= \begin{bmatrix}
+			-IR_0T_i^{-1} & & & & & & & \\
+			IR_0T_i^{-1} &-T_{inc}^{-1} & & & & & &\\
+			& T_{inc}^{-1} &-T_i^{-1} & & & & &\\
+			& & p_mT_{inc}^{-1} &-T_{rm}^{-1} & & & & \\
+			& & & & & & & & T_d^{-1} \\
+			& & p_sT_{inc}^{-1}  & &-T_{h}^{-1}  & & &\\
+			& & & & T_h^{-1}  &-T_{rs}^{-1}  & & \\
+			& & p_fT_{inc}^{-1}  & & & -T_d^{-1}  & &\\
+			& & T_{rm}^{-1}  & &T_{rh}^{-1}  & & &\\
+		\end{bmatrix}
+		\begin{bmatrix}
+			S \\
+			E \\
+			I \\
+			M \\
+			\Sigma \\
+			H \\
+			F \\
+			R \\
+			D
+		\end{bmatrix}
+	\end{align}
+	
+	\begin{figure}[ht]
+		\centering
+		\resizebox{0.8\textwidth}{!}{%
+			\incfig{figures/CovidSEIR}
+		}
+		\label{fig:SEIRModel}
+		\caption{SEIR model with }
+	\end{figure}
+	
+	\clearpage
+	\printbibliography
+\end{document}
